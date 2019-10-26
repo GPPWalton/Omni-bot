@@ -1,0 +1,14 @@
+<launch>
+	<arg name="namespace" default="/omni"/>
+	<arg name="cmd_timeout" default="0.5"/>
+	<group ns="$(arg namespace)">
+		<rosparam file="$(find omni_control)/config/joint_ctrlr_params.yaml" command="load"/>
+		<rosparam file="$(find omni_control)/config/diff_driver_params.yaml" command="load"/>
+		<!-- load the controllers -->
+		<node name="controller_spawner" pkg="controller_manager" type="spawner"
+          args="$(find omni_control)/config/joint_ctrlr_params.yaml 
+								$(find omni_control)config/diff_driver_params.yaml"/>
+		
+			
+	</group>
+</launch>

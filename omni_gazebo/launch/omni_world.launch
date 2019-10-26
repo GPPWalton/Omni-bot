@@ -1,0 +1,48 @@
+<launch>
+
+  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="namespace" default="/omni"/>
+  <arg name="cmd_timeout" default="0.5"/>
+
+  
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+  <group ns="$(arg namespace)">	
+	<!-- Convert an xacro and put on parameter server -->
+	<param name="robot_description" command="$(find xacro)/xacro.py $(find omni_description)/urdf/omni.urdf.xacro" />
+
+  <!-- Load the URDF into the ROS Parameter Server
+  <param name="robot_description" textfile="$(find omni_description)/urdf/omni.urdf"/> -->
+
+ 
+  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+    args="-urdf -x 0 -y 0 -z 1 -model OMNI -param robot_description"/>
+
+  <!-- load the controllers -->
+	<node name="controller_spawner" pkg="controller_manager" type="spawner"
+          args="$(find omni_control)/config/joint_ctrlr_params.yaml 
+								$(find omni_control)/config/diff_driver_params.yaml"/>
+
+
+
+	<node name="vehicle_state_publisher" pkg="robot_state_publisher"
+          type="robot_state_publisher">
+      <param name="publish_frequency" value="30.0"/>
+	</node>
+  <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
+    <param name="default_topic" value="/omni/wheel_base_controller/cmd_vel"/>
+  </node>
+	</group>
+</launch>
