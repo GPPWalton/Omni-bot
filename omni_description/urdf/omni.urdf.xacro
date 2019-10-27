@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omni">
 
+<!--ROS Gazebo plugin-->
 <gazebo>
   <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
     <robotNamespace>/omni</robotNamespace>
   </plugin>
 </gazebo>
+
+<!--xacro constants used for robot dimensions-->
 <xacro:property name="wb_w" value="0.18"/>
 <xacro:property name="wb_h" value="0.005"/>
 <xacro:property name="wb_d" value="0.18"/>
@@ -16,7 +19,8 @@
 <xacro:property name="ct_d" value="${wb_d/1.51}"/>
 <xacro:property name="ct_m" value="${((ct_w*ct_d)/(wb_w*wb_d))*wb_m}"/>
 
-<xacro:property name="camera_link" value="0.05" /> <!-- Size of square 'camera' box -->
+<!-- Size of square 'camera' box -->
+<xacro:property name="camera_link" value="0.05" /> 
 
 <xacro:property name="p_r" value="0.0025"/>
 <xacro:property name="p_l" value="0.0515"/>
@@ -29,6 +33,7 @@
 <xacro:property name="b_r" value="0.024"/>
 <xacro:property name="b_m" value="0.60"/>
 
+<!--macros used to define inertia and geometry tags-->
 <xacro:macro name="wb_inertial" params="mass depth width height">
   <inertial>
     <mass value="${mass}"/>
@@ -95,6 +100,7 @@
     </inertial>
 </xacro:macro>
 
+  <!-- link definitions-->
   <link name = "wheel_base">
     <visual>
       <xacro:wb_dim depth="${wb_d}" width="${wb_w}" height="${wb_h}"/>
@@ -102,6 +108,7 @@
     <collision>
       <xacro:wb_dim depth="${wb_d}" width="${wb_w}" height="${wb_h}"/>
     </collision>
+    <!--depth, width and height parameters are squared before being passed in, to simplify inertia calculations-->
     <xacro:wb_inertial mass="${wb_m}" depth="${wb_d*wb_d}" width="${wb_w*wb_w}" height="${wb_h*wb_h}"/>
   </link>
 
@@ -112,6 +119,7 @@
     <collision>
       <xacro:wb_dim depth="${ct_d}" width="${ct_w}" height="${ct_h}"/>
     </collision>
+    <!--depth, width and height parameters are squared before being passed in, to simplify inertia calculations-->
     <xacro:wb_inertial mass="${wb_m}" depth="${ct_d*ct_d}" width="${ct_w*ct_w}" height="${ct_h*ct_h}"/>
   </link>
 
@@ -146,6 +154,7 @@
     <collision>
       <xacro:wheel_dim length="${w_l}" radius="${w_r}"/>
     </collision>
+    <!--length and radius parameters are squared before being passed in, to simplify inertia calculations-->
     <xacro:wheel_inertia mass="${w_m}" length="${w_l*w_l}" radius="${w_r*w_r}" />
   </link>
 
@@ -156,6 +165,7 @@
     <collision>
       <xacro:wheel_dim length="${w_l}" radius="${w_r}"/>
     </collision>
+    <!--length and radius parameters are squared before being passed in, to simplify inertia calculations-->
     <xacro:wheel_inertia mass="${w_m}" length="${w_l*w_l}" radius="${w_r*w_r}" />
   </link>
 
@@ -166,6 +176,7 @@
     <collision>
       <xacro:b_dim radius="${b_r}"/>
     </collision>
+    <!--radius parameters are squared before being passed in, to simplify inertia calculations-->
     <xacro:b_inertia mass="${b_m}" radius="${b_r*b_r}"/>
   </link>
 
@@ -176,13 +187,16 @@
     <collision>
       <xacro:b_dim radius="${b_r}"/>
     </collision>
+    <!--radius parameters are squared before being passed in, to simplify inertia calculations-->
     <xacro:b_inertia mass="${b_m}" radius="${b_r*b_r}"/>
   </link>
 
+  <!--joint definitions-->
   <joint name = "wb_lw_joint" type = "continuous">
     <parent link = "wheel_base"/>
     <child link= "left_wheel"/>
     <axis xyz = "0 0 1"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 1.57075 1.57075" xyz="0 ${(wb_w/2)+(w_l/2)} 0"/>
     <dynamics friction="14.595"/>
     <limit effort="1000.0" velocity="3.12928"/>
@@ -192,6 +206,7 @@
     <parent link = "wheel_base"/>
     <child link= "right_wheel"/>
     <axis xyz = "0 0 1"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 1.57075 1.57075" xyz="0 -${(wb_w/2)+(w_l/2)} 0"/>
     <dynamics friction="14.595"/>
     <limit effort="1000.0" velocity="3.12928"/>
@@ -200,42 +215,49 @@
   <joint name = "wb_bf_joint" type = "fixed">
     <parent link = "wheel_base"/>
     <child link= "bearing_front"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="${(wb_w/2)+(w_l/2)} 0 0"/>
   </joint>
 
   <joint name = "wb_br_joint" type = "fixed">
     <parent link = "wheel_base"/>
     <child link= "bearing_rear"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="-${(wb_w/2)+(w_l/2)} 0 0"/>
   </joint>
 
   <joint name="slf_wb_joint" type ="fixed">
     <parent link = "wheel_base"/>
     <child link= "support_lf"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="${ct_w/1.77/2} ${ct_d/1.77/2} ${(wb_h/2)+(p_l/2)}"/>
   </joint>
 
   <joint name="slr_wb_joint" type ="fixed">
     <parent link = "wheel_base"/>
     <child link= "support_lr"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="${ct_w/1.77/2} -${ct_d/1.77/2} ${(wb_h/2)+(p_l/2)}"/>
   </joint>
 
   <joint name="srf_wb_joint" type ="fixed">
     <parent link = "wheel_base"/>
     <child link= "support_rf"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="${-ct_w/1.77/2} ${ct_d/1.77/2} ${(wb_h/2)+(p_l/2)}"/>
   </joint>
 
   <joint name="srr_wb_joint" type ="fixed">
     <parent link = "wheel_base"/>
     <child link= "support_rr"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="-${ct_w/1.77/2} -${ct_d/1.77/2} ${(wb_h/2)+(p_l/2)}"/>
   </joint>
 
   <joint name="ct_wb_joint" type="fixed">
     <parent link = "wheel_base"/>
     <child link= "cam_tier"/>
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin rpy="0 0 0" xyz="0 0 ${wb_h+p_l}"/>
   </joint>
 
@@ -243,9 +265,11 @@
     <parent link="wheel_base"/>
     <child link="cam"/>
     <axis xyz="0 1 0" />
+    <!--xyz parameters set using macros to allow joint position to scale if the constants are changed-->
     <origin xyz="0 0 ${2*wb_h+p_l+(camera_link/2)}" rpy="0 0 0"/>
   </joint>
 
+  <!--transmission definitions-->
   <transmission name="trans_left">
 		<type>transmission_interface/SimpleTransmission</type>
 		<joint name="wb_lw_joint">
@@ -268,6 +292,7 @@
 		</actuator>
 	</transmission>
 
+  <!--gazebo camera plugin-->
   <gazebo reference="cam">
     <sensor name="camera" type="wideanglecamera">
       <camera>
